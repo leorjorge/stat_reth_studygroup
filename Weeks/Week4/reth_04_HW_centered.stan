@@ -12,14 +12,14 @@ transformed data {
 parameters {
   real alfa;
   real beta;
-  real<lower=0, upper = 50> sigma;
+  real<lower=0> sigma;
 }
 
 model {
   vector[N] mu;
   mu = alfa + beta*(H - H_bar);
   W ~ normal(mu, sigma);
-  alfa ~ normal(50, 20);
+  alfa ~ normal(50, 30);
   beta ~ uniform(0, 1);
   sigma ~ exponential(1);
 }

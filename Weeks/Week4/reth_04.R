@@ -76,7 +76,7 @@ Weight_fit$cmdstan_summary()
 precis(Weight_fit)
 
 Weight_post <- Weight_fit$draws(format = "df")
-precis(Weight_post[,2:3])
+precis(as.data.frame(Weight_post))
 
 dens(Weight_post$mu)
 dens(Weight_post$sigma)
@@ -107,12 +107,12 @@ H <- runif(20, 130, 200)
 W <- sim_weight(H, b = 0.5, sd = 5)
 plot(W~H, col = 2, lwd = 3)
 
-plot(d.a$weight ~ d.a$height)
+plot(d.a$weight ~ d.a$height, col = 2, lwd = 3)
 
 WeightHeight_model <- cmdstan_model(stan_file = "Weeks/Week4/reth_04_HW.stan")
 ## prior predictive
 n <- 1e3
-a <- rnorm(n, 0, 10)
+a <- rnorm(n, 0, 30)
 b <- runif(n, 0, 1)
 
 plot(NULL, xlim = c(130, 200), ylim = c(50, 90))
@@ -138,6 +138,7 @@ WH_fit <- WeightHeight_model$sample(
 )
 WH_fit
 precis(WH_fit)
+summary(lm(weight~height, data = d.a))
 WH_post <- WH_fit$draws(format = "df")
 
 ## Posterior mu
@@ -147,6 +148,7 @@ for(i in 1:ncol(WH_postpred_mu)){
    WH_postpred_mu[ ,i] <- WH_post$alfa + WH_post$beta*height_seq[i]
 }
 mean_mu <- apply(WH_postpred_mu, 2, mean)
+
 #posterior predictive
 WH_postpred_W <- matrix(nrow = nrow(WH_post), ncol = length(height_seq))
 for(i in 1:length(WH_postpred_mu)){
@@ -155,12 +157,17 @@ for(i in 1:length(WH_postpred_mu)){
 
 plot(d.a$weight ~ d.a$height, col = 2, lwd = 3)
 for(j in 1:1000){
-   lines(height_seq, WH_postpred_mu[j, ], lwd = 1, col = col.alpha(2, alpha = 0.01))
+   lines(height_seq, WH_postpred_mu[sample(1:8000, 1), ], lwd = 1, col = col.alpha(2, alpha = 0.01))
 }
-lines(height_seq, mean_mu, lwd = 2, col = 2)
+lines(height_seq, mean_mu, lwd = 3, col = 2)
+shade(apply(WH_postpred_mu, 2, PI, prob = 0.95), height_seq, col = col.alpha(acol = 2, alpha = 0.2))
 
-W_PI <- apply(WH_postpred_W, 2, PI)
+W_PI <- apply(WH_postpred_W, 2, PI, prob = 0.65)
 shade(W_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.2))
+
+W_PI <- apply(WH_postpred_W, 2, PI, prob = 0.95)
+shade(W_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.2))
+
 
 ## Centered model like in the chapter - what are the advantages and disadvantages?
 WH_centered_model <- cmdstan_model(stan_file = "Weeks/Week4/reth_04_HW_centered.stan")
@@ -189,8 +196,18 @@ for(i in 1:length(WH_centered_postpred_mu)){
 
 plot(d.a$weight ~ d.a$height, col = 2, lwd = 3)
 for(j in 1:1000){
-   lines(height_seq, WH_centered_postpred_mu[j,], lwd = 1, col = col.alpha(2, alpha = 0.01))
+   lines(height_seq, WH_centered_postpred_mu[sample(1:8000, 1),], lwd = 1, col = col.alpha(2, alpha = 0.01))
 }
-lines(height_seq, mean_mu_centered, lwd = 2, col = 2)
-WH_centered_PI <- apply(WH_centered_postpred_W, 2, PI)
-shade(WH_centered_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.2))
+lines(height_seq, mean_mu_centered, lwd = 3, col = 2)
+
+WH_centered_PI <- apply(WH_centered_postpred_W, 2, PI, prob = 0.5)
+shade(WH_centered_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.1))
+
+WH_centered_PI <- apply(WH_centered_postpred_W, 2, PI, prob = 0.65)
+shade(WH_centered_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.1))
+
+WH_centered_PI <- apply(WH_centered_postpred_W, 2, PI, prob = 0.95)
+shade(WH_centered_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.1))
+
+WH_centered_PI <- apply(WH_centered_postpred_W, 2, PI, prob = 0.99)
+shade(WH_centered_PI, height_seq, lty = 2, lwd = 2, col = col.alpha(acol = "black", alpha = 0.1))

@@ -6,7 +6,7 @@ data {
 
 parameters {
   real mu;
-  real<lower=0, upper = 50> sigma;
+  real<lower=0> sigma;
 }
 
 // The model to be estimated. We model the output
@@ -15,5 +15,6 @@ parameters {
 model {
   W ~ normal(mu, sigma);
   mu ~ normal(50, 20);
+  sigma ~ exponential(1);
 }
 
